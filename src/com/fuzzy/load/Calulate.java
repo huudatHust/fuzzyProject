@@ -50,7 +50,6 @@ public class Calulate {
      * function to get dependence of property
      *
      * @param x value input
-     * @param typePro : type propety need get depen
      * @return value depen of input x
      */
     public float getDepenOfPro(int x, int min, int max) {
