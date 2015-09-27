@@ -51,7 +51,7 @@ public class Calulate {
      *
      * @param x value input
      * @param typePro : type propety need get depen
-     * @return value depen of x
+     * @return value depen of input x
      */
     public float getDepenOfPro(int x, int min, int max) {
         //min = properties.get(typePro).get(0);
