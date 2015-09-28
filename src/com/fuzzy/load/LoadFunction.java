@@ -27,6 +27,7 @@ public class LoadFunction {
         return bf;
     }
 
+    //sinh luat
     public void loadToDB(String fileName) throws FileNotFoundException, IOException, SQLException {
         int age, fnlwgt, edu_num, cap_gain, cap_loss, hour;
         String workclass, edu, mari, occup, realtion, race, sex, country, predict;
@@ -38,9 +39,13 @@ public class LoadFunction {
                 return;
             }
             conn.setAutoCommit(false);
-            String queryInsert = "INSERT INTO `data_input`( `age`, `workclass`, `fnlwgt`, `education`, `education_num`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `predict`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            //query insert data rules
+            //String queryInsert = "INSERT INTO `data_input`( `age`, `workclass`, `fnlwgt`, `education`, `education_num`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `predict`, `depen_value`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+            //query insert data test
+            String queryInsert = "INSERT INTO `test_input`( `age`, `workclass`, `fnlwgt`, `education`, `education_num`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `predict`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement insertState = conn.prepareStatement(queryInsert);
-            BufferedReader input = loadStream("adult.data");
+            BufferedReader input = loadStream(fileName);
             String line;
             int i = 0;
             while ((line = input.readLine()) != null) {
@@ -110,7 +115,7 @@ public class LoadFunction {
             return;
         }
         String queryString = "select `id`,`age`, `workclass`, `education`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `depen_value` from rules_data";
-       
+
         Statement query = conn.createStatement();
         ResultSet rs = query.executeQuery(queryString);
         //
@@ -150,7 +155,7 @@ public class LoadFunction {
         System.out.println("read data complete.....");
 
         //begin update
-         String updateString = "update rules_data set active=? where id=?";
+        String updateString = "update rules_data set active=? where id=?";
         PreparedStatement updateState = conn.prepareStatement(updateString);
         Iterator entries = map.entrySet().iterator();
         while (entries.hasNext()) {
@@ -159,7 +164,7 @@ public class LoadFunction {
             updateState.setInt(1, 1);
             updateState.setInt(2, (int) value.get(0));
             updateState.executeUpdate();
-           
+
         }
         updateState.close();
         conn.close();
@@ -167,7 +172,7 @@ public class LoadFunction {
     }
 
     public void generateRules() throws SQLException, IOException {
-        int age, fnlwgt, edu_num, cap_gain, cap_loss, hour;
+        int age, cap_gain, cap_loss, hour;
         String workclass, edu, mari, occup, realtion, race, sex, country, predict;
 
         ArrayList<ArrayList> result = new ArrayList<>();
@@ -240,6 +245,7 @@ public class LoadFunction {
             insertState.setFloat(14, (float) temp.get(13));
             insertState.executeUpdate();
         }
+        query.close();
         insertState.close();
         conn.close();
 
@@ -305,9 +311,181 @@ public class LoadFunction {
         conn.close();
     }
 
+    //sinh bo test
+    public void sinhTestChuan() throws SQLException, IOException {
+        int age, fnlwgt, edu_num, cap_gain, cap_loss, hour;
+        String workclass, edu, mari, occup, realtion, race, sex, country, predict;
+
+        ArrayList<ArrayList> result = new ArrayList<>();
+        Calulate cal = new Calulate();
+
+        ConnectDB db = new ConnectDB();
+        Connection conn = db.getConnecttion();
+        if (conn == null) {
+            System.out.println("can't not connect db");
+            return;
+        }
+        String queryString = "select `age`, `workclass`, `education`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `predict` from test_input";
+        String insertRules = "INSERT INTO `test_data`( `age`, `workclass`, `education`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `predict`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        //----------------------------------------begin select
+
+        Statement query = conn.createStatement();
+        ResultSet rs = query.executeQuery(queryString);
+
+        while (rs.next()) {
+            age = rs.getInt("age");
+            cap_gain = rs.getInt("cap_gain");
+            cap_loss = rs.getInt("cap_loss");
+            hour = rs.getInt("hour_per_week");
+            workclass = rs.getString("workclass");
+            edu = rs.getString("education");
+            mari = rs.getString("marital_status");
+            occup = rs.getString("occupation");
+            realtion = rs.getString("relationship");
+            race = rs.getString("race");
+            sex = rs.getString("sex");
+            country = rs.getString("country");
+            predict = rs.getString("predict");
+            ArrayList temp = new ArrayList();
+            temp.add(cal.getDegree(age, Calulate.AGE));
+            temp.add(workclass);
+            temp.add(edu);
+            temp.add(mari);
+            temp.add(occup);
+            temp.add(realtion);
+            temp.add(race);
+            temp.add(sex);
+            temp.add(cal.getDegree(cap_gain, Calulate.CAPITAL_GAIN));
+            temp.add(cal.getDegree(cap_loss, Calulate.CAPITAL_LOSS));
+            temp.add(cal.getDegree(hour, Calulate.HOUR_PER_WEEK));
+            temp.add(country);
+            temp.add(predict);
+            result.add(temp);
+        }
+        System.out.println("select complete ......");
+
+        PreparedStatement insertState = conn.prepareStatement(insertRules);
+        for (int i = 0; i < result.size(); i++) {
+            ArrayList temp = result.get(i);
+            insertState.setInt(1, (int) temp.get(0));
+            insertState.setString(2, (String) temp.get(1));
+            insertState.setString(3, (String) temp.get(2));
+            insertState.setString(4, (String) temp.get(3));
+            insertState.setString(5, (String) temp.get(4));
+            insertState.setString(6, (String) temp.get(5));
+            insertState.setString(7, (String) temp.get(6));
+            insertState.setString(8, (String) temp.get(7));
+            insertState.setInt(9, (int) temp.get(8));
+            insertState.setInt(10, (int) temp.get(9));
+            insertState.setInt(11, (int) temp.get(10));
+            insertState.setString(12, (String) temp.get(11));
+            insertState.setString(13, (String) temp.get(12));
+            insertState.executeUpdate();
+        }
+        insertState.close();
+        conn.close();
+
+    }
+
+    public void test() throws IOException, SQLException {
+        int age, cap_gain, cap_loss, hour, id;
+        String workclass, edu, mari, occup, realtion, race, sex, country, predict;
+
+        HashMap<String, String> map = new HashMap<>();//map of rules
+        Calulate cal = new Calulate();
+
+        ConnectDB db = new ConnectDB();
+        Connection conn = db.getConnecttion();
+        if (conn == null) {
+            System.out.println("can't not connect db");
+            return;
+        }
+        String queryString = "select `age`, `workclass`, `education`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `predict` from `rules_data` where `active`=1";
+
+        Statement query = conn.createStatement();
+        ResultSet rs = query.executeQuery(queryString);
+        rs.afterLast();
+        System.out.println(rs.getRow());
+        rs.beforeFirst();
+        // get tap luat
+        while (rs.next()) {
+            age = rs.getInt("age");
+            cap_gain = rs.getInt("cap_gain");
+            cap_loss = rs.getInt("cap_loss");
+            hour = rs.getInt("hour_per_week");
+            workclass = rs.getString("workclass");
+            edu = rs.getString("education");
+            mari = rs.getString("marital_status");
+            occup = rs.getString("occupation");
+            realtion = rs.getString("relationship");
+            race = rs.getString("race");
+            sex = rs.getString("sex");
+            country = rs.getString("country");
+            predict = rs.getString("predict");
+            String key = age + workclass + edu + mari + occup + realtion + race + sex + cap_gain + cap_loss + hour + country;
+            map.put(key, predict);
+            
+        }
+        System.out.println("read data rules complete....." + rs.getRow());
+
+        //read data test
+        ArrayList<Integer> resultTrue = new ArrayList<>();
+        String queryStringTest = "select `id`,`age`, `workclass`, `education`, `marital_status`, `occupation`, `relationship`, `race`, `sex`, `cap_gain`, `cap_loss`, `hour_per_week`, `country`, `predict` from test_data";
+        Statement queryTest = conn.createStatement();
+        ResultSet rs1 = queryTest.executeQuery(queryStringTest);
+        // get tap test
+        int count = 0;
+        while (rs1.next()) {
+            id = rs1.getInt("id");
+            age = rs1.getInt("age");
+            cap_gain = rs1.getInt("cap_gain");
+            cap_loss = rs1.getInt("cap_loss");
+            hour = rs1.getInt("hour_per_week");
+            workclass = rs1.getString("workclass");
+            edu = rs1.getString("education");
+            mari = rs1.getString("marital_status");
+            occup = rs1.getString("occupation");
+            realtion = rs1.getString("relationship");
+            race = rs1.getString("race");
+            sex = rs1.getString("sex");
+            country = rs1.getString("country");
+            predict = rs1.getString("predict");
+            String key = age + workclass + edu + mari + occup + realtion + race + sex + cap_gain + cap_loss + hour + country;
+//            if (map.containsKey(key) && map.get(key).equals(predict)) {
+//                resultTrue.add(id);
+//            }
+            if(map.containsKey(key))
+                count++;
+        }
+        System.out.println("read data test complete....."+ count);
+
+        //begin update
+        String updateString = "update test_data set active=? where id=?";
+        PreparedStatement updateState = conn.prepareStatement(updateString);
+        Iterator entries = resultTrue.iterator();
+        while (entries.hasNext()) {
+            int value = (int) entries.next();
+            updateState.setInt(1, 1);
+            updateState.setInt(2, value);
+            updateState.executeUpdate();
+
+        }
+        query.close();
+        queryTest.close();
+        updateState.close();
+        conn.close();
+        System.out.println("close connect");
+    }
+
     public static void main(String[] args) throws SQLException, IOException {
         LoadFunction a = new LoadFunction();
-        a.xuLiMauThuan();
+        
+        String fileTest = "adult.test";
+        // a.loadToDB(fileTest);
+       // a.generateRules();
+        //a.xuLiMauThuan();
+//        a.sinhTestChuan();
+        a.test();
     }
 
 }

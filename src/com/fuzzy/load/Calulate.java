@@ -66,11 +66,25 @@ public class Calulate {
         return 0;
     }
 
+    /**
+     *
+     * @param x
+     * @param value1
+     * @param value2
+     * @param typegrap : if typegrap = true => y(value1) = 0, y(value2) = 1 else
+     * y(value1) = 1, y(value2) = 0
+     * @return
+     */
     public float getDepenOfPro1(int x, int value1, int value2) {
+        boolean typeGrap = true;
         if (value1 == value2) {
             return 1;
         }
-        return (value2 - x * 1.0f) / (value2 - value1);
+        if (typeGrap) {
+            return (value2 - x * 1.0f) / (value2 - value1);
+        } else {
+            return (x * 1.0f - value1) / (value2 - value1);
+        }
     }
 
     /**
@@ -86,7 +100,7 @@ public class Calulate {
             if (list.get(i) >= x) {
                 if (x > list.get(1) && x < list.get(leng - 2)) {
                     return getDepenOfPro(x, list.get(i - 1), list.get(i));
-                } else {
+                } else  {
                     return getDepenOfPro1(x, list.get(i - 1), list.get(i));
                 }
             }
@@ -119,6 +133,7 @@ public class Calulate {
         }
         return -1;
     }
+
     public float getDepenOfCap_loss(int x) {
         ArrayList<Integer> list = properties.get(CAPITAL_GAIN);
         int leng = list.size();
@@ -130,24 +145,24 @@ public class Calulate {
         return -1;
     }
 
-    public float getDepenOfRule(int age, int hour, int cap_gain, int cap_loss){
-         float x1 = getDepenOfAge(age) >= getDepenOfHourOfWeek(hour) ? getDepenOfHourOfWeek(hour) : getDepenOfAge(age);
-         float x2 = getDepenOfCap_again(cap_gain) >= getDepenOfCap_loss(cap_loss) ?getDepenOfCap_loss(cap_loss):  getDepenOfCap_again(cap_gain);
-         return x1 >= x2 ? x2 : x1;
+    public float getDepenOfRule(int age, int hour, int cap_gain, int cap_loss) {
+        float x1 = getDepenOfAge(age) >= getDepenOfHourOfWeek(hour) ? getDepenOfHourOfWeek(hour) : getDepenOfAge(age);
+        float x2 = getDepenOfCap_again(cap_gain) >= getDepenOfCap_loss(cap_loss) ? getDepenOfCap_loss(cap_loss) : getDepenOfCap_again(cap_gain);
+        return x1 >= x2 ? x2 : x1;
     }
+
     /**
      * anh xa tu gia tri ro x sang tapj mo
      */
     public int getDegree(int x, int TypePro) {
-         ArrayList<Integer> list = properties.get(TypePro);
-         for(int i = 1 ; i < list.size(); i+=2){
-             if(x <= list.get(i))
-                 return (i+1)/2;
-         }
-         return -1;
+        ArrayList<Integer> list = properties.get(TypePro);
+        for (int i = 1; i < list.size(); i += 2) {
+            if (x <= list.get(i)) {
+                return (i + 1) / 2;
+            }
+        }
+        return -1;
     }
-
-  
 
     public static void main(String[] args) throws IOException {
         Calulate a = new Calulate();
